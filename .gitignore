@@ -2,3 +2,4 @@ Makefile
 *.make
 bin
 obj
+.vs

@@ -51,7 +51,7 @@ inline std::chrono::milliseconds Driver::OurMergeSortTimed(const MergeSortSettin
 {
     auto start_t = std::chrono::high_resolution_clock::now();
     //std::stable_sort(begin, end);
-    // MergeSort(sett, begin, end);
+     MergeSort(sett, begin, end);
     auto end_t = std::chrono::high_resolution_clock::now();
 
     return std::chrono::duration_cast<std::chrono::milliseconds>(end_t - start_t);

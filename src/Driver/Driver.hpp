@@ -33,7 +33,7 @@ inline std::chrono::milliseconds Driver::IntTestTimed(_RAIter begin, _RAIter end
 
     if (!sorted)
     {
-        after << "After: ";
+        after << "After:    ";
         for (auto it = begin; it != end; it++)
             after << *it << " ";
         after << "\n";

@@ -3,3 +3,11 @@
 #include <cstring>
 #include <iterator> 
 #include <iostream>
+#include <cstdint>
+#include <vector>
+#include <ranges>
+#include <numeric>
+#include <random>
+#include <chrono>
+#include <assert.h>
+#include <functional>

@@ -2,3 +2,7 @@ Makefile
 *.make
 bin
 obj
+/.vs
+*.vcxproj
+*.user
+*.sln

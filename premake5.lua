@@ -11,7 +11,7 @@ project "Mergesort"
    flags{"MultiProcessorCompile"}
 
    files {"src/**.c","src/**.cpp"}
-   pchheader "pch.hpp"
+   --pchheader "pch.hpp"
    includedirs {"src","lib"}
    --links { }
 

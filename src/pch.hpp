@@ -1,3 +1,4 @@
+#pragma once
 #include "mergesort.h"
 #include <algorithm>
 #include <cstring>
@@ -11,3 +12,16 @@
 #include <chrono>
 #include <assert.h>
 #include <functional>
+#include <type_traits>
+#include <sstream>
+#include <utility>
+
+#if defined(_MSC_VER)
+  #include <intrin.h>
+  #define DEBUG_BREAK() __debugbreak()
+#elif defined(__GNUC__) || defined(__clang__)
+  #include <csignal>
+  #define DEBUG_BREAK() raise(SIGTRAP)
+#else
+  #define DEBUG_BREAK() ((void)0)
+#endif

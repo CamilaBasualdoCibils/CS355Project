@@ -7,6 +7,7 @@ project "Mergesort"
    kind "ConsoleApp"
    language "C++"
    cppdialect "C++20"
+   architecture "x86_64"
    targetdir "bin/%{cfg.buildcfg}"
    flags{"MultiProcessorCompile"}
 

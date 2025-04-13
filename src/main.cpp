@@ -12,7 +12,7 @@ std::stringstream ss;
 
 const uint64_t max_thread_test = std::thread::hardware_concurrency();
 std::cerr << "Running " << max_thread_test << " Threads\n";
-const uint64_t Test_count_each = 10;
+const uint64_t Test_count_each = 50;
 const uint64_t N = 10000000;
 for (int thr_cnt = 1; thr_cnt <= max_thread_test;thr_cnt++) {
 

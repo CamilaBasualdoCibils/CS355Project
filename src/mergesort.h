@@ -26,7 +26,7 @@ template<typename RandomAccessIterator>
 inline void MergeSingleThread(RandomAccessIterator begin, unsigned halfSize, unsigned backSize)
 {
     using ValueType = typename std::iterator_traits<RandomAccessIterator>::value_type;
-    ValueType* merge = new ValueType[halfSize + backSize]{ 0 };
+    ValueType* merge = new ValueType[halfSize + backSize]{ ValueType() };
     
     unsigned i = 0, j = 0;
     while (i < halfSize && j < backSize)

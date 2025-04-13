@@ -91,7 +91,8 @@
         "*.cpp-old": "cpp",
         "__config": "cpp",
         "cinttypes": "cpp",
-        "execution": "cpp"
+        "execution": "cpp",
+        "csignal": "cpp"
     },
     "C_Cpp.default.cppStandard": "c++20",
 

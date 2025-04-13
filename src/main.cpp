@@ -10,9 +10,10 @@ int main()
 std::stringstream ss;
 
 
-const uint64_t max_thread_test = 32;
-const uint64_t Test_count_each = 1000;
-const uint64_t N = 100000;
+const uint64_t max_thread_test = std::thread::hardware_concurrency();
+std::cerr << "Running " << max_thread_test << " Threads\n";
+const uint64_t Test_count_each = 10;
+const uint64_t N = 10000000;
 for (int thr_cnt = 1; thr_cnt <= max_thread_test;thr_cnt++) {
 
     const uint64_t progress_bar_char_count = max_thread_test;
@@ -28,7 +29,7 @@ for (int thr_cnt = 1; thr_cnt <= max_thread_test;thr_cnt++) {
     std::cout << "] " <<(int)(progress*100)<<"%    " << std::flush;
 
     for (int test_count = 0; test_count< Test_count_each;test_count++ ) {
-        auto time = driver.IotaIntTestTimed(N,true,thr_cnt);
+        RecordTimeType time = driver.IotaIntTestTimed(N,true,thr_cnt);
         ss << thr_cnt << "," 
         << std::fixed << std::setprecision(6) << std::chrono::duration<double>(time).count()
         <<std::endl;

@@ -23,6 +23,8 @@ project "Mergesort"
    filter "configurations:Release"
       defines { "_NDEBUG","_RELEASE" }
       optimize "On"
+      symbols "On"
+
 
    --filter "action:gmake" IMPORTANT FOR COMPILING IN LINUX FOR WINDOWS
       --gccprefix "x86_64-w64-mingw32-" --compilation in linux for windows

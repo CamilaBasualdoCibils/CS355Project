@@ -17,7 +17,8 @@
 #include <type_traits>
 #include <sstream>
 #include <utility>
-
+#include <thread>
+#include <atomic>
 #if defined(_MSC_VER)
   #include <intrin.h>
   #define DEBUG_BREAK() __debugbreak()

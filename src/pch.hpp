@@ -19,6 +19,8 @@
 #include <utility>
 #include <thread>
 #include <atomic>
+#include <future>
+#include <memory>
 #if defined(_MSC_VER)
   #include <intrin.h>
   #define DEBUG_BREAK() __debugbreak()

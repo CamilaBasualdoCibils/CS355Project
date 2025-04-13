@@ -26,34 +26,109 @@ template<typename RandomAccessIterator>
 inline void MergeSingleThread(RandomAccessIterator begin, unsigned halfSize, unsigned backSize)
 {
     using ValueType = typename std::iterator_traits<RandomAccessIterator>::value_type;
-    ValueType* merge = new ValueType[halfSize + backSize]{ ValueType() };
-    
-    unsigned i = 0, j = 0;
+    const unsigned totalSize = halfSize + backSize;
+
+    // Allocate a temporary buffer. Use unique_ptr to manage the memory automatically.
+    std::unique_ptr<ValueType[]> merge(new ValueType[totalSize]);
+
+    // Create raw pointers for merging.
+    ValueType* left = &begin[0];
+    ValueType* right = &begin[halfSize];
+    unsigned i = 0, j = 0, k = 0;
+
+    // Merge while both halves have elements.
     while (i < halfSize && j < backSize)
     {
-        if (begin[i] < begin[halfSize + j])
+        // Use conditional operator to reduce branching overhead.
+        merge[k++] = (left[i] < right[j]) ? left[i++] : right[j++];
+    }
+
+    // Copy any leftover elements from the left half.
+    if (i < halfSize)
+    {
+        std::copy(left + i, left + halfSize, merge.get() + k);
+    }
+    // Or copy the ones left from the right half.
+    else if (j < backSize)
+    {
+        std::copy(right + j, right + backSize, merge.get() + k);
+    }
+
+    // Copy back the merged sequence into the original array.
+    std::copy(merge.get(), merge.get() + totalSize, begin);
+}
+template<typename RandomAccessIterator>
+void MergeMultiThread(RandomAccessIterator begin, unsigned halfSize, unsigned backSize, int depth = 0)
+{
+    using ValueType = typename std::iterator_traits<RandomAccessIterator>::value_type;
+    unsigned totalSize = halfSize + backSize;
+
+    // Threshold and depth limit for spawning parallel tasks.
+    const unsigned parallelThreshold = 10000; // Only parallelize if the total size is above this.
+    const int maxDepth = 2;                   // Limit the recursion depth for parallel merging.
+
+    // If the problem is small or we've reached the maximum recursion depth,
+    // fall back to the sequential merge.
+    if (totalSize < parallelThreshold || depth >= maxDepth)
+    {
+        MergeSingleThread(begin, halfSize, backSize);
+        return;
+    }
+
+    // Partition the merge:
+    // Choose a pivot in the left half (middle element).
+    unsigned leftMid = halfSize / 2;
+    ValueType pivot = *(begin + leftMid);
+
+    // In the right half, find the insertion point for the pivot using binary search.
+    RandomAccessIterator rightBegin = begin + halfSize;
+    unsigned rightMid = static_cast<unsigned>(std::lower_bound(rightBegin, begin + totalSize, pivot) - rightBegin);
+
+    // Allocate a temporary buffer for the merged output.
+    std::unique_ptr<ValueType[]> temp(new ValueType[totalSize]);
+
+    // Define a lambda that merges a specific range into the temporary buffer.
+    // The lambda parameters define the subrange indices for left and right segments,
+    // and where the merged output should be placed in the temporary buffer.
+    auto merge_range = [begin, &temp](unsigned leftStart, unsigned leftEnd,
+        unsigned rightStart, unsigned rightEnd,
+        unsigned destStart)
         {
-            merge[i + j] = begin[i];
-            ++i;
-        }
-        else
-        {
-            merge[i + j] = begin[halfSize + j];
-            ++j;
-        }
-    }
-    // Copy leftover elements from the left half
-    while (i < halfSize) {
-        merge[i + j] = *(begin + i);
-        ++i;
-    }
-    // Copy leftover elements from the right half
-    while (j < backSize) {
-        merge[i + j] = *(begin + halfSize + j);
-        ++j;
-    }
-    std::copy(merge, merge + (halfSize + backSize), begin);
-    delete[] merge;
+            unsigned i = leftStart, j = rightStart, k = destStart;
+            while (i < leftEnd && j < rightEnd)
+            {
+                temp[k++] = (*(begin + i) < *(begin + j)) ? *(begin + i++) : *(begin + j++);
+            }
+            while (i < leftEnd)
+            {
+                temp[k++] = *(begin + i++);
+            }
+            while (j < rightEnd)
+            {
+                temp[k++] = *(begin + j++);
+            }
+        };
+
+    // Launch two concurrent tasks to merge the two partitions:
+    // - Left merge: merge the left part of the left segment [0, leftMid)
+    //               with the corresponding part of the right segment [halfSize, halfSize+rightMid).
+    // - Right merge: merge the remaining portions.
+    std::future<void> futureLeft = std::async(std::launch::async, merge_range,
+        0u, leftMid,              // left segment indices
+        halfSize, halfSize + rightMid, // right segment indices
+        0u);                      // destination index starts at 0
+
+    std::future<void> futureRight = std::async(std::launch::async, merge_range,
+        leftMid, halfSize,         // left segment indices
+        halfSize + rightMid, totalSize, // right segment indices
+        leftMid + rightMid);       // destination index
+
+    // Wait for both merging tasks to complete.
+    futureLeft.get();
+    futureRight.get();
+
+    // Copy the merged data from the temporary buffer back to the original sequence.
+    std::copy(temp.get(), temp.get() + totalSize, begin);
 }
 template <typename RandomAccessIterator>
 void mergesortparallel(const MergeSortSettings& settings,
@@ -100,5 +175,15 @@ void mergesortparallel(const MergeSortSettings& settings,
     }
 
     // Finally, merge both halves
-    MergeSingleThread(begin, halfSize, size - halfSize);
+    MergeMultiThread(begin, halfSize, size - halfSize);
+}
+template <typename RandomAccessIterator>
+void mergesortparallel_entry(const MergeSortSettings& settings,
+                             RandomAccessIterator begin,
+                             RandomAccessIterator end)
+{
+    std::atomic<int> activeThreads(1); // We start with 1 "active" thread
+    mergesortparallel(settings, begin, end, activeThreads);
+    // No need to wait here specifically, because mergesortparallel
+    // waits/join()s on the threads it spawns before returning.
 }
